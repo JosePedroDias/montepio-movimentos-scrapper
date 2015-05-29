@@ -1,0 +1,22 @@
+{
+  "name": "montepio-movimentos-scrapper",
+  "description": "",
+  "version": "1.0.0",
+  "main": "scrapper.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "selenium-standalone": "latest",
+    "webdriverio": "latest",
+    "chromedriver": "latest",
+    "phantomjs": "latest",
+    "node-static": "latest"
+  }
+}

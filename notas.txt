@@ -1,0 +1,85 @@
+página:
+    http://www.montepio.pt/SitePublico/pt_PT/particulares.page
+
+#loginid_IN
+    username
+
+#net24Submit
+    click
+
+clicar em 2
+    #pinForm input[value="2"]   click
+
+
+validar q está logged in
+    #net24Submit value= "SAIR"
+
+
+https://net24.montepio.pt/Net24-Web/func/contasordem/ctaOrdemMovimentos.jsp
+https://net24.montepio.pt/Net24-Web/func/contasordem/ctaOrdemMovimentosCriterios.jsp
+
+select[name="seleccaoConta"]
+
+input[name="pesquisaMovimentos"] click
+
+#agendamentoIniAno
+#agendamentoIniMes
+#agendamentoIniDia
+
+#agendamentoFimAno
+#agendamentoFimMes
+#agendamentoFimDia
+
+input[name="consultar"]     click
+
+
+
+#printable
+
+#printable > table > tbody > tr:nth-child(1)             -> dados de conta
+#printable > table > tbody > tr:nth-child(3)             -> saldos e valores a disp
+
+#printable > table > tbody > tr:nth-child(6)             -> movimentos
+
+linhas:
+
+document.querySelectorAll('#printable > table > tbody > tr:nth-child(6) tr')
+pop 1o
+
+data mov
+    text de td[0]
+data valor
+    text de td[1]
+descricao
+    text de td[2] a
+    attr onClick
+importancia
+    text de td[3]
+saldo cont.
+    text de td[4]
+
+
+(function() {
+    var trEls = document.querySelectorAll('#printable > table > tbody > tr:nth-child(6) tr');
+    trEls = Array.prototype.slice.call(trEls);
+    trEls.shift();
+    trEls.pop();
+    trEls.pop();
+    trEls.pop();
+    return trEls.map(function(trEl) {
+        var tdEls = trEl.querySelectorAll('td');
+        var aEl = tdEls[2].querySelector('a');
+        var a = aEl.getAttribute('onClick');
+        var b = a.split(/[\(\)]/)[1];
+        b = b.substring(1, b.length-1);
+        b = b.split("','");
+        return {
+            dataMov: tdEls[0].innerText,
+            dataValor: tdEls[1].innerText,
+            descricao: aEl.innerText,
+            extra: b,
+            importancia: tdEls[3].innerText,
+            saldoCont: tdEls[4].innerText
+        };
+    });
+})();
