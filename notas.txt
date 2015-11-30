@@ -22,6 +22,10 @@ select[name="seleccaoConta"]
 
 input[name="pesquisaMovimentos"] click
 
+
+------------------
+
+
 #agendamentoIniAno
 #agendamentoIniMes
 #agendamentoIniDia
