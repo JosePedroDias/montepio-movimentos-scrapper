@@ -1,0 +1,20 @@
+
+var o = {
+    desc         : a[ 0], // mimpo    'COMPRA+++NETFLIX.COM'
+    amount       : a[ 1], // mimpo    '-7.99'
+    amountP      : a[ 2], // mimpop   '-7.99'
+    currencyP    : a[ 3], // cmoed    'EUR'
+    balance      : a[ 4], // msald    '5563.94'
+    local        : a[ 5], // mloca    '018'
+    date         : a[ 6], // mdatam   '20151123'
+    dateP        : a[ 7], // mdatav   '20151123'
+    time         : a[ 8], // mhora    '0458'
+    checkP       : a[ 9], // mnche    '0'
+    referenceP   : a[10], // mrefe    '153260738661598'
+    currencyC    : a[11], // cmoeda   'EUR'
+    operation    : a[12], // mcoper   'SM2'
+    branchC      : a[13], // cbalcao  '019'
+    accountNo    : a[14], // numconta '100068360'
+    term         : a[15], // cterm    'DST5'
+    journal      : a[16]  // zjournal '570565'
+};

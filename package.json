@@ -7,11 +7,12 @@
     "test": "test"
   },
   "scripts": {
-      "selenium-start": "selenium-standalone start &"
+    "selenium-start": "selenium-standalone start &"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "yargs": "^3.30.0"
   },
   "devDependencies": {
     "selenium-standalone": "latest",

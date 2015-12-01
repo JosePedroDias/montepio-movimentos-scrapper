@@ -1,25 +1,11 @@
 var fs          = require('fs');
 var webdriverio = require('webdriverio');
-
-
+var argv = require('yargs')
+    .usage('Usage: $0 --account=[accName] --start=[yyyymmdd] --end=[yyyymmdd] --endNegGap=1 --nrDays=7')
+    .demand(['account'])
+    .argv;
 
 var credentiais = require('./private/credentiais.json');
-
-
-
-var ARGS = {
-    nrDays          : 7,
-    deltaDaysEnd    : -1,
-    accountToChoose : 'EU' // EU BLAZIS
-};
-
-var DAY = 1000 * 60 * 60 * 24;
-
-var nowTS = (new Date()).valueOf();
-var endDate   = new Date( nowTS + DAY*ARGS.deltaDaysEnd );
-var startDate = new Date( nowTS + DAY*(ARGS.nrDays * -1) );
-//console.log('startDate', startDate.toISOString() );
-//console.log('endDate  ',   endDate.toISOString() );
 
 
 
@@ -44,17 +30,39 @@ var normalizeDate = function(s) { // '20150123' -> '2015-01-23'
     return a.join('');
 };
 
-var toCSV = function(arr) {
-    var cols = 'dateMov time reference amount desc'.split(' ');
-    //"dateMov":"2015-11-23","reference":"153260738661598","amount":"-7.99","dateVal":"2015-11-23","saldo":"5563.94","time":"04:58","desc":"COMPRA NETFLIX.COM"}
-    var out = [];
-    out.push( '"' + cols.join('","') + '"');
-    arr.forEach(function(row) {
-        row = cols.map(function(col) { return row[col]; });
-        out.push( '"' + row.join('","') + '"');
-    });
-    return out.join('\n');
+
+
+//console.log('argv', argv);
+
+if (!('nrDays'    in argv)) { argv.nrDays    = '1'; }
+if (!('endNegGap' in argv)) { argv.endNegGap = '7'; }
+
+var ARGS = {
+    nrDays          : -parseInt(argv.nrDays,    10),
+    deltaDaysEnd    : -parseInt(argv.endNegGap, 10),
+    accountToChoose :           argv.account
 };
+
+var DAY = 1000 * 60 * 60 * 24;
+
+var nowTS = (new Date()).valueOf();
+
+if ('end' in argv) {
+    ARGS.endDate = new Date( argv.end );
+}
+else {
+    ARGS.endDate = new Date( nowTS + DAY*ARGS.deltaDaysEnd );
+}
+
+if ('start' in argv) {
+    ARGS.startDate = new Date( argv.start );
+}
+else {
+    ARGS.startDate = new Date( ARGS.endDate.valueOf() + DAY*ARGS.nrDays );
+}
+
+//console.log('ARGS', ARGS);
+//process.exit(0);
 
 
 
@@ -108,36 +116,15 @@ client
             .click('input[name="pesquisaMovimentos"]')
 
             // datas de início e fim
-            .selectByValue('#agendamentoIniAno', '' +       startDate.getFullYear()  )
-            .selectByValue('#agendamentoIniMes', '' + pad0( startDate.getMonth()+1 ) )
-            .selectByValue('#agendamentoIniDia', '' + pad0( startDate.getDate()    ) )
-            .selectByValue('#agendamentoFimAno', '' +         endDate.getFullYear()  )
-            .selectByValue('#agendamentoFimMes', '' + pad0(   endDate.getMonth()+1 ) )
-            .selectByValue('#agendamentoFimDia', '' + pad0(   endDate.getDate()    ) )
+            .selectByValue('#agendamentoIniAno', '' +       ARGS.startDate.getFullYear()  )
+            .selectByValue('#agendamentoIniMes', '' + pad0( ARGS.startDate.getMonth()+1 ) )
+            .selectByValue('#agendamentoIniDia', '' + pad0( ARGS.startDate.getDate()    ) )
+            .selectByValue('#agendamentoFimAno', '' +         ARGS.endDate.getFullYear()  )
+            .selectByValue('#agendamentoFimMes', '' + pad0(   ARGS.endDate.getMonth()+1 ) )
+            .selectByValue('#agendamentoFimDia', '' + pad0(   ARGS.endDate.getDate()    ) )
             .click('input[name="consultar"]')
 
             // movimentos
-            /*
-            var o = {
-                desc      : arr[ 0], // 'COMPRA+++NETFLIX.COM'
-                amount    : arr[ 1], // '-7.99'
-                //'2'     : arr[ 2], // '-7.99'
-                //'3'     : arr[ 3], // 'EUR'
-                saldo     : arr[ 4], // '5563.94'
-                //'5'     : arr[ 5], // '018'
-                dateMov   : arr[ 6], // '20151123'
-                dateVal   : arr[ 7], // '20151123'
-                time      : arr[ 8], // '0458'
-                //'9'     : arr[ 9], // '0'
-                reference : arr[10], // '153260738661598'
-                //'11'    : arr[11], // 'EUR'
-                //'12'    : arr[12], // 'SM2'
-                //'13'    : arr[13], // '019'
-                //'14'    : arr[14], // '100068360'
-                //'15'    : arr[15], // 'DST5'
-                //'16'    : arr[16]  // '570565'
-            };
-            */
             .selectorExecute('#printable > table > tbody > tr:nth-child(6) tr', function(trEls) {
                 trEls = (function(lst) {
                     var l = lst.length; var arr = new Array(l);
@@ -153,13 +140,23 @@ client
                         var oc2 = oc.substring(13, oc.length-15);
                         var a = JSON.parse('[' + oc2.replace(/\'/g, '"') + ']');
                         return {
-                            desc      : a[ 0],
-                            amount    : a[ 1],
-                            saldo     : a[ 4],
-                            dateMov   : a[ 6],
-                            dateVal   : a[ 7],
-                            time      : a[ 8],
-                            reference : a[10],
+                            desc         : a[ 0],
+                            amount       : a[ 1],
+                            amountP      : a[ 2],
+                            currencyP    : a[ 3],
+                            balance      : a[ 4],
+                            local        : a[ 5],
+                            date         : a[ 6],
+                            dateP        : a[ 7],
+                            time         : a[ 8],
+                            checkP       : a[ 9],
+                            referenceP   : a[10],
+                            currencyC    : a[11],
+                            operation    : a[12],
+                            branchC      : a[13],
+                            accountNo    : a[14],
+                            term         : a[15],
+                            journal      : a[16]
                         };
                     } catch(ex) {
                         return undefined;
@@ -168,22 +165,21 @@ client
             }).then(function(data) {
                 data = data.filter(function(o) { return o; }); // remove failed rows
                 data = data.map(function(o) {
-                    o.desc    = normalizeDesc(o.desc);
-                    o.dateMov = normalizeDate(o.dateMov);
-                    o.dateVal = normalizeDate(o.dateVal);
-                    o.time    = normalizeTime(o.time);
+                    o.desc  = normalizeDesc(o.desc);
+                    o.date  = normalizeDate(o.date);
+                    o.dateP = normalizeDate(o.dateP);
+                    o.time  = normalizeTime(o.time);
                     return o;
                 });
                 //console.log('data', data);
 
                 var fn = 'results/' + [
                     ARGS.accountToChoose,
-                    startDate.toISOString().substring(0, 10),
-                      endDate.toISOString().substring(0, 10)
+                    ARGS.startDate.toISOString().substring(0, 10),
+                      ARGS.endDate.toISOString().substring(0, 10)
                 ].join('_');
 
                 fs.writeFileSync(fn + '.json', JSON.stringify(data));
-                fs.writeFileSync(fn + '.csv',  toCSV(         data));
 
                 client.end();
                 console.log('ALL DONE! (' + data.length + ' rows scrapped)');
